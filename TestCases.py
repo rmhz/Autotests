@@ -10,10 +10,26 @@ Action = webdriver.ActionChains
 
 
 # URL is a variable because we have 3 different instances to run the tests
-#URL = "http://cogniance.com"                             # Prodaction server
-URL = "http://ec2-54-157-244-22.compute-1.amazonaws.com" # Staging server
+URL = "http://cogniance.com"                             # Prodaction server
+#URL = "http://ec2-54-157-244-22.compute-1.amazonaws.com" # Staging server
 #URL = "http://newsiteqa2.cogniance.com"                   # QA server
 
+class BaseFixture:
+    @classmethod                             #\
+    def setup_class(cls):                    # \
+        print('Test suit start execution')   #  \
+                                             #   \
+    @classmethod                             #    \
+    def teardown_class(cls):                 #     \
+        browser.quit()                       #      \
+        print('Test suit end execution')     #       > Functions that return the instance to the default station after execution of every test
+                                             #      /
+    def setup_method(self, method):          #     /
+        browser.maximize_window()            #    /
+        browser.get(URL)                     #   /
+                                             #  /
+    def teardown_method(self, method):       # /
+        print('end of test case')            #/
 
 class Test_Repository:
 
@@ -27,7 +43,7 @@ class Test_Repository:
         assert logo.status_code == 200
         assert logo_2.status_code == 200
 
-
+@pytest.mark.skipif("True")
 class TestWebSite: # Tests for wevsite
 
     @classmethod                             #\
@@ -369,7 +385,7 @@ class TestWebSite: # Tests for wevsite
 
         assert rgba_hovered == '0'
 
-
+@pytest.mark.skipif("True")
 class TestWPAdmin: # Tests for WP-Admin
 
     @classmethod                                                 #\
@@ -401,7 +417,23 @@ class TestWPAdmin: # Tests for WP-Admin
         Number_of_Activated_plugins = Activated_plugins.text
         assert Number_of_All_plugins == Number_of_Activated_plugins
 
+class TestsByRoman(BaseFixture):
 
+    def test_projectHoverWidth(self):
+        project_list = browser.find_elements_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"])')
+        for project in project_list:
+            Action(browser).move_to_element(project).perform()
+            project_hover = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"]) > .hover-dialog')
+            assert project_hover.size['height'] == project.size['height']/2
 
+    def test_allProjectHoverWidth(self):
+        load_all_button = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a[class*="all"]')
+        Action(browser).click(load_all_button).perform()
+        project_list = browser.find_elements_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"])')
+        for project in project_list:
+            Action(browser).move_to_element(project).perform()
+            project_hover = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"]) > .hover-dialog')
+            assert project_hover.size['height'] == project.size['height']/2
 
-
+if __name__ == '__main__':
+    pytest.main([__file__, '-v',"--capture=sys"])
