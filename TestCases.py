@@ -4,6 +4,8 @@ import requests
 import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 browser = webdriver.Firefox()
 Action = webdriver.ActionChains
@@ -31,6 +33,7 @@ class BaseFixture:
     def teardown_method(self, method):       # /
         print('end of test case')            #/
 
+@pytest.mark.skipif("True")
 class Test_Repository:
 
     def test_favicon(self): #Check if the favicon is present
@@ -418,14 +421,14 @@ class TestWPAdmin: # Tests for WP-Admin
         assert Number_of_All_plugins == Number_of_Activated_plugins
 
 class TestsByRoman(BaseFixture):
-
+    @pytest.mark.skipif("True")
     def test_projectHoverWidth(self):
         project_list = browser.find_elements_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"])')
         for project in project_list:
             Action(browser).move_to_element(project).perform()
             project_hover = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"]) > .hover-dialog')
             assert project_hover.size['height'] == project.size['height']/2
-
+    @pytest.mark.skipif("True")
     def test_allProjectHoverWidth(self):
         load_all_button = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a[class*="all"]')
         Action(browser).click(load_all_button).perform()
@@ -434,6 +437,17 @@ class TestsByRoman(BaseFixture):
             Action(browser).move_to_element(project).perform()
             project_hover = browser.find_element_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"]) > .hover-dialog')
             assert project_hover.size['height'] == project.size['height']/2
+
+    def test_projectHoverText(self):
+        project_list = browser.find_elements_by_css_selector('.our-work > .list-projects > li:not(.hide) > a:not([class*="all"])')
+        hover_text=[]
+        for project in project_list:
+            Action(browser).move_to_element(project).perform()
+            browser.implicitly_wait(3)
+            project_hover = WebDriverWait(browser,3).until(EC.presence_of_element_located(('css selector','.our-work > .list-projects > li:not(.hide) > a:not([class*="all"]) > .hover-dialog > h4')))
+            hover_text.append(project_hover.get_attribute('textContent'))
+        assert hover_text == []
+            # assert False
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v',"--capture=sys"])
